@@ -623,7 +623,8 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; letter-spacing: -0.02em; }
 .checkboxes { display: flex; flex-direction: column; gap: 10px; }
 .cbox { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
 .cbox input { accent-color: var(--accent); width: 16px; height: 16px; }
-.list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.list-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; flex-wrap: wrap; gap: 24px; }
+@media (max-width: 900px) { .list-head { display: none !important; } }
 .list-results { color: var(--ink-3); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
 .sort {
   display: flex; align-items: center; gap: 8px;
@@ -1075,10 +1076,9 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; letter-spacing: -0.02em; }
 
 /* Visibility helpers (tighter than mass display:none usage) */
 .show-mobile { display: none; }
-.hide-mobile { display: initial; }
 @media (max-width: 768px) {
   .show-mobile { display: initial; }
-  .hide-mobile { display: none; }
+  .hide-mobile { display: none !important; }
 }
 .show-mobile-flex { display: none; }
 @media (max-width: 768px) { .show-mobile-flex { display: inline-flex; } }
@@ -1455,6 +1455,12 @@ h1, h2, h3, h4 { margin: 0; font-weight: 500; letter-spacing: -0.02em; }
 .contact-shell { grid-template-columns: 320px 1fr; }
 @media (max-width: 900px) {
   .help-shell, .contact-shell { grid-template-columns: 1fr; }
+}
+
+/* Fix global img reset breaking Leaflet */
+.leaflet-container img {
+  max-width: none !important;
+  display: inline !important;
 }
 
 /* Login: image on top on mobile */
