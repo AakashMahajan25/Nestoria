@@ -1,0 +1,64 @@
+# Self-hosted Nestoria (Coolify "Docker Compose" build pack, or plain
+# `docker compose up`). Only `frontend` needs a public domain; it proxies
+# /api to `backend`, which talks to `db` over the internal network.
+#
+# SERVICE_PASSWORD_* are Coolify magic variables: Coolify generates and stores
+# them on first deploy. Outside Coolify, export them yourself.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nestoria_db
+      POSTGRES_USER: nestoria
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+    volumes:
+      - nestoria-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nestoria -d nestoria_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: nestoria_db
+      DB_USER: nestoria
+      DB_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+      DB_SSL: "false"
+      JWT_SECRET: ${SERVICE_PASSWORD_64_JWT}
+      JWT_EXPIRES_IN: 7d
+      # Same-origin via the frontend proxy, so CORS only matters for
+      # third-party callers. Set to your public URL to lock it down.
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      SUPABASE_BUCKET_NAME: ${SUPABASE_BUCKET_NAME:-hotel-images}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    restart: unless-stopped
+    environment:
+      API_UPSTREAM: http://backend:5000
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  nestoria-pgdata:
